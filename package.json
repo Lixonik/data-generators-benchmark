@@ -13,9 +13,9 @@
   "dependencies": {
     "@faker-js/faker": "^8.3.1",
     "@types/node": "^20.10.2",
-    "@types/plotly.js": "^2.12.30",
     "canvas": "^2.11.2",
-    "chart.js": "^4.4.1",
+    "chart.js": "^3.9.1",
+    "chartjs-node-canvas": "^4.1.6",
     "typescript": "^5.3.2",
     "zufall": "^2.0.2"
   },
