@@ -9,10 +9,8 @@ const zufallGeneratorString = (arg: number) => randomString(arg)
 Benchmark.pushCandidate(fakerGeneratorString)
 Benchmark.pushCandidate(zufallGeneratorString)
 
-Benchmark.measureTime()
+Benchmark.plotAndSaveMeasurementTimesCharts()
 
-//console.log(path.join(process.cwd(), `/`))
+Benchmark.printAvgGenerationTimes(2)
 
-//randomString.bind(4)
-
-//console.log(randomString())
+Benchmark.printPerformanceLevels()
