@@ -1,15 +1,30 @@
 {
   "name": "data-generators-benchmark",
   "version": "1.0.0",
-  "description": "",
+  "description": "Benchmark for generation data libraries",
   "main": "index.js",
   "scripts": {
-    "play": "ts-node ./playground/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "demo": "ts-node demo/index.ts",
+    "make": "npx tsc"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lixonik/data-generators-benchmark.git"
+  },
+  "keywords": [
+    "benchmark",
+    "data_generation",
+    "testing",
+    "frontend",
+    "performance",
+    "Node.js"
+  ],
+  "author": "Boris Prokhorov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lixonik/data-generators-benchmark/issues"
+  },
+  "homepage": "https://github.com/Lixonik/data-generators-benchmark#readme",
   "dependencies": {
     "@faker-js/faker": "^8.3.1",
     "@types/node": "^20.10.2",
