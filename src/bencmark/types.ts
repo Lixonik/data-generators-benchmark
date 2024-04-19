@@ -1,4 +1,4 @@
 export type TimeSeriesAndStringLengths = {
-    timeSeries: number[]
-    stringLengths: number[]
+	timeSeries: number[]
+	stringLengths: number[]
 }

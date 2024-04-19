@@ -2,10 +2,11 @@
   "name": "data-generators-benchmark",
   "version": "1.0.0",
   "description": "Benchmark for generation data libraries",
-  "main": "index.js",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "scripts": {
-    "demo": "ts-node demo/index.ts",
-    "make": "npx tsc"
+    "prebuild:npm": "rimraf lib/",
+    "build:npm": "webpack --config webpack.config.npm.js && tsc"
   },
   "repository": {
     "type": "git",
@@ -25,16 +26,22 @@
     "url": "https://github.com/Lixonik/data-generators-benchmark/issues"
   },
   "homepage": "https://github.com/Lixonik/data-generators-benchmark#readme",
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "rimraf": "^5.0.5",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.4.5",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
+  },
   "dependencies": {
-    "@faker-js/faker": "^8.3.1",
-    "@types/node": "^20.10.2",
     "canvas": "^2.11.2",
     "chart.js": "^3.9.1",
-    "chartjs-node-canvas": "^4.1.6",
-    "typescript": "^5.3.2",
-    "zufall": "^2.0.2"
+    "chartjs-node-canvas": "^4.1.6"
   },
-  "devDependencies": {
-    "ts-node": "^10.9.1"
+  "browser": {
+    "fs": false,
+    "perf_hooks": false
   }
 }

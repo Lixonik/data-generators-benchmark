@@ -8,129 +8,129 @@ import { TimeSeriesAndStringLengths } from './types'
 
 
 export class Benchmark {
-    private static generatorFunctions: Function[] = []
+	private static generatorFunctions: Function[] = []
 
-    static pushCandidate = (...candidates: Function[]) => {
-        Benchmark.generatorFunctions.push(...candidates)
-    }
+	static pushCandidate = (...candidates: Function[]) => {
+		Benchmark.generatorFunctions.push(...candidates)
+	}
 
-    static plotAndSaveMeasurementTimesCharts(pathToMeasurementsPng?: PathLike) {
-        Benchmark.generatorFunctions.forEach((fn) => {
-            const timeSeriesAndStringLengths = this.getFunctionTimeSeriesAndStringLengths(fn)
+	static plotAndSaveMeasurementTimesCharts(pathToMeasurementsPng?: PathLike) {
+		Benchmark.generatorFunctions.forEach((fn) => {
+			const timeSeriesAndStringLengths = this.getFunctionTimeSeriesAndStringLengths(fn)
 
-            const generatedStringLength: number[] = timeSeriesAndStringLengths.stringLengths
-            const timeToGeneration: number[] = timeSeriesAndStringLengths.timeSeries
+			const generatedStringLength: number[] = timeSeriesAndStringLengths.stringLengths
+			const timeToGeneration: number[] = timeSeriesAndStringLengths.timeSeries
 
-            for (let i = 0; i < 99; i++) {
-                const start = performance.now()
-                fn(i)
-                const end = performance.now()
-                const duration = end - start
+			for (let i = 0; i < 99; i++) {
+				const start = performance.now()
+				fn(i)
+				const end = performance.now()
+				const duration = end - start
 
-                generatedStringLength.push(i)
-                timeToGeneration.push(duration)
-            }
+				generatedStringLength.push(i)
+				timeToGeneration.push(duration)
+			}
 
-            const width = 1200, height = 800
-            const canvas = createCanvas(width, height)
-            const ctx = canvas.getContext('2d') as unknown as ChartItem
-            const plugin = {
-                id: 'customCanvasBackgroundImage',
-                beforeDraw: (chart: Chart) => {
-                    const ctx = chart.ctx
-                    ctx.fillStyle = '#ffffff'
-                    ctx.fillRect(0, 0, canvas.width, canvas.height)
-                },
-            }
-            const data: ChartData = {
-                labels: generatedStringLength.map(String),
-                datasets: [
-                    {
-                        label: 'Line generation time vs length graph',
-                        data: timeToGeneration,
-                        borderColor: 'blue',
-                        borderWidth: 2,
-                        fill: false,
-                    },
-                ],
-            }
-            const config: ChartConfiguration = {
-                type: 'line',
-                data: data,
-                plugins: [plugin],
-            }
-            new Chart(ctx, config)
-            const buffer = canvas.toBuffer('image/png')
+			const width = 1200, height = 800
+			const canvas = createCanvas(width, height)
+			const ctx = canvas.getContext('2d') as unknown as ChartItem
+			const plugin = {
+				id: 'customCanvasBackgroundImage',
+				beforeDraw: (chart: Chart) => {
+					const ctx = chart.ctx
+					ctx.fillStyle = '#ffffff'
+					ctx.fillRect(0, 0, canvas.width, canvas.height)
+				},
+			}
+			const data: ChartData = {
+				labels: generatedStringLength.map(String),
+				datasets: [
+					{
+						label: 'Line generation time vs length graph',
+						data: timeToGeneration,
+						borderColor: 'blue',
+						borderWidth: 2,
+						fill: false,
+					},
+				],
+			}
+			const config: ChartConfiguration = {
+				type: 'line',
+				data: data,
+				plugins: [plugin],
+			}
+			new Chart(ctx, config)
+			const buffer = canvas.toBuffer('image/png')
 
-            if (!fs.existsSync(`${pathToMeasurementsPng ?? './measurements'}`)) {
-                fs.mkdirSync(`${pathToMeasurementsPng ?? './measurements'}`)
-            }
+			if (!fs.existsSync(`${pathToMeasurementsPng ?? './measurements'}`)) {
+				fs.mkdirSync(`${pathToMeasurementsPng ?? './measurements'}`)
+			}
 
-            fs.writeFileSync(`${pathToMeasurementsPng ?? './measurements'}/${fn.name}.png`, buffer)
-        })
-    }
+			fs.writeFileSync(`${pathToMeasurementsPng ?? './measurements'}/${fn.name}.png`, buffer)
+		})
+	}
 
-    static printAvgGenerationTimes(precision?: number) {
-        Benchmark.generatorFunctions.forEach((fn) => {
-            const timeToGeneration = this.getFunctionTimeSeriesAndStringLengths(fn).timeSeries
+	static printAvgGenerationTimes(precision?: number) {
+		Benchmark.generatorFunctions.forEach((fn) => {
+			const timeToGeneration = this.getFunctionTimeSeriesAndStringLengths(fn).timeSeries
 
-            const sumOfTimesToGeneration = timeToGeneration.reduce((acc, time) => acc + time, 0)
+			const sumOfTimesToGeneration = timeToGeneration.reduce((acc, time) => acc + time, 0)
 
-            const avgGenerationTime: number = sumOfTimesToGeneration / timeToGeneration.length
+			const avgGenerationTime: number = sumOfTimesToGeneration / timeToGeneration.length
 
-            console.log(`Average generation time for function ${fn.name} = ${precision
-                ? avgGenerationTime.toFixed(precision)
-                : avgGenerationTime
-            } ms`)
-        })
-    }
+			console.log(`Average generation time for function ${fn.name} = ${precision
+				? avgGenerationTime.toFixed(precision)
+				: avgGenerationTime
+			} ms`)
+		})
+	}
 
-    static printPerformanceLevels() {
-        const avgGenerationTimes: number[] = []
+	static printPerformanceLevels() {
+		const avgGenerationTimes: number[] = []
 
-        Benchmark.generatorFunctions.forEach((fn) => {
-            const timeToGeneration = this.getFunctionTimeSeriesAndStringLengths(fn).timeSeries
+		Benchmark.generatorFunctions.forEach((fn) => {
+			const timeToGeneration = this.getFunctionTimeSeriesAndStringLengths(fn).timeSeries
 
-            const sumOfTimesToGeneration = timeToGeneration.reduce((acc, time) => acc + time, 0)
+			const sumOfTimesToGeneration = timeToGeneration.reduce((acc, time) => acc + time, 0)
 
-            avgGenerationTimes.push(sumOfTimesToGeneration / timeToGeneration.length)
-        })
+			avgGenerationTimes.push(sumOfTimesToGeneration / timeToGeneration.length)
+		})
 
-        const minValue: number = Math.min(...avgGenerationTimes)
+		const minValue: number = Math.min(...avgGenerationTimes)
 
-        const performanceLevels: string[] = avgGenerationTimes.map(avgGenerationTime => {
-            const percentageExceedingMinGenerationTime = avgGenerationTime / minValue
+		const performanceLevels: string[] = avgGenerationTimes.map(avgGenerationTime => {
+			const percentageExceedingMinGenerationTime = avgGenerationTime / minValue
 
-            if (percentageExceedingMinGenerationTime === 1) {
-                return 'high'
-            } else if (percentageExceedingMinGenerationTime > 1 && percentageExceedingMinGenerationTime < 2) {
-                return 'middle'
-            } else {
-                return 'low'
-            }
-        })
+			if (percentageExceedingMinGenerationTime === 1) {
+				return 'high'
+			} else if (percentageExceedingMinGenerationTime > 1 && percentageExceedingMinGenerationTime < 2) {
+				return 'middle'
+			} else {
+				return 'low'
+			}
+		})
 
-        for (let index = 0; index < performanceLevels.length; index++) {
-            console.log(`Performance level for function ${Benchmark.generatorFunctions[index].name} -- ${performanceLevels[index]}`)
-        }
-    }
+		for (let index = 0; index < performanceLevels.length; index++) {
+			console.log(`Performance level for function ${Benchmark.generatorFunctions[index].name} -- ${performanceLevels[index]}`)
+		}
+	}
 
-    private static getFunctionTimeSeriesAndStringLengths(fn: Function): TimeSeriesAndStringLengths {
-        const generatedStringLength: number[] = []
-        const timeToGeneration: number[] = []
+	private static getFunctionTimeSeriesAndStringLengths(fn: Function): TimeSeriesAndStringLengths {
+		const generatedStringLength: number[] = []
+		const timeToGeneration: number[] = []
 
-        for (let i = 0; i < 99; i++) {
-            const start = performance.now()
-            fn(i)
-            const end = performance.now()
-            const duration = end - start
+		for (let i = 0; i < 99; i++) {
+			const start = performance.now()
+			fn(i)
+			const end = performance.now()
+			const duration = end - start
 
-            generatedStringLength.push(i)
-            timeToGeneration.push(duration)
-        }
-        return {
-            timeSeries: timeToGeneration,
-            stringLengths: generatedStringLength,
-        }
-    }
+			generatedStringLength.push(i)
+			timeToGeneration.push(duration)
+		}
+		return {
+			timeSeries: timeToGeneration,
+			stringLengths: generatedStringLength,
+		}
+	}
 }
