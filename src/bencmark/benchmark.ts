@@ -1,11 +1,8 @@
 import { performance } from 'perf_hooks'
-import { ChartConfiguration, ChartData, ChartItem } from 'chart.js'
-import { Chart } from 'chart.js/auto'
-import * as fs from 'fs'
+import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { PathLike } from 'fs'
-import { createCanvas } from 'canvas'
-import { TimeSeriesAndStringLengths } from './types'
-
+import { ComparedResult } from './types'
+import { generateGraph, getFunctionName } from './utils'
 
 export class Benchmark {
 	private static generatorFunctions: Function[] = []
@@ -14,71 +11,45 @@ export class Benchmark {
 		Benchmark.generatorFunctions.push(...candidates)
 	}
 
+	static removeCandidate = (...candidates: Function[]) => {
+		Benchmark.generatorFunctions = Benchmark.generatorFunctions.filter(fn => !candidates.includes(fn))
+	}
+
+	static clearCandidates = () => {
+		Benchmark.generatorFunctions = []
+	}
+
 	static plotAndSaveMeasurementTimesCharts(pathToMeasurementsPng?: PathLike) {
+		pathToMeasurementsPng ??= './measurements'
+
 		Benchmark.generatorFunctions.forEach((fn) => {
-			const timeSeriesAndStringLengths = this.getFunctionTimeSeriesAndStringLengths(fn)
+			const functionName = getFunctionName(fn)
+			const comparedResult = this.getFunctionTimeSeriesAndLoopIndices(fn)
 
-			const generatedStringLength: number[] = timeSeriesAndStringLengths.stringLengths
-			const timeToGeneration: number[] = timeSeriesAndStringLengths.timeSeries
+			const { timeToGeneration, loopIndices, measurementHash } = comparedResult
 
-			for (let i = 0; i < 99; i++) {
-				const start = performance.now()
-				fn(i)
-				const end = performance.now()
-				const duration = end - start
-
-				generatedStringLength.push(i)
-				timeToGeneration.push(duration)
-			}
-
-			const width = 1200, height = 800
-			const canvas = createCanvas(width, height)
-			const ctx = canvas.getContext('2d') as unknown as ChartItem
-			const plugin = {
-				id: 'customCanvasBackgroundImage',
-				beforeDraw: (chart: Chart) => {
-					const ctx = chart.ctx
-					ctx.fillStyle = '#ffffff'
-					ctx.fillRect(0, 0, canvas.width, canvas.height)
-				},
-			}
-			const data: ChartData = {
-				labels: generatedStringLength.map(String),
-				datasets: [
-					{
-						label: 'Line generation time vs length graph',
-						data: timeToGeneration,
-						borderColor: 'blue',
-						borderWidth: 2,
-						fill: false,
-					},
-				],
-			}
-			const config: ChartConfiguration = {
-				type: 'line',
-				data: data,
-				plugins: [plugin],
-			}
-			new Chart(ctx, config)
+			const canvas = generateGraph(loopIndices, timeToGeneration)
 			const buffer = canvas.toBuffer('image/png')
 
-			if (!fs.existsSync(`${pathToMeasurementsPng ?? './measurements'}`)) {
-				fs.mkdirSync(`${pathToMeasurementsPng ?? './measurements'}`)
+			if (!existsSync(pathToMeasurementsPng)) {
+				mkdirSync(pathToMeasurementsPng)
 			}
 
-			fs.writeFileSync(`${pathToMeasurementsPng ?? './measurements'}/${fn.name}.png`, buffer)
+			writeFileSync(`${pathToMeasurementsPng}/${functionName}_${measurementHash}.png`, buffer)
 		})
 	}
 
 	static printAvgGenerationTimes(precision?: number) {
 		Benchmark.generatorFunctions.forEach((fn) => {
-			const timeToGeneration = this.getFunctionTimeSeriesAndStringLengths(fn).timeSeries
+			const functionName = getFunctionName(fn)
+			const { timeToGeneration, measurementHash } = this.getFunctionTimeSeriesAndLoopIndices(fn)
 
 			const sumOfTimesToGeneration = timeToGeneration.reduce((acc, time) => acc + time, 0)
 
 			const avgGenerationTime: number = sumOfTimesToGeneration / timeToGeneration.length
 
-			console.log(`Average generation time for function ${fn.name} = ${precision
+			console.log('Measurement hash = ', measurementHash)
+			console.log(`Average generation time for function ${functionName} = ${precision
 				? avgGenerationTime.toFixed(precision)
 				: avgGenerationTime
 			} ms`)
@@ -87,13 +58,15 @@ export class Benchmark {
 
 	static printPerformanceLevels() {
 		const avgGenerationTimes: number[] = []
+		const measurementHashes: number[] = []
 
 		Benchmark.generatorFunctions.forEach((fn) => {
-			const timeToGeneration = this.getFunctionTimeSeriesAndStringLengths(fn).timeSeries
+			const { timeToGeneration, measurementHash } = this.getFunctionTimeSeriesAndLoopIndices(fn)
 
 			const sumOfTimesToGeneration = timeToGeneration.reduce((acc, time) => acc + time, 0)
 
 			avgGenerationTimes.push(sumOfTimesToGeneration / timeToGeneration.length)
+			measurementHashes.push(measurementHash)
 		})
 
 		const minValue: number = Math.min(...avgGenerationTimes)
@@ -111,26 +84,35 @@ export class Benchmark {
 		})
 
 		for (let index = 0; index < performanceLevels.length; index++) {
-			console.log(`Performance level for function ${Benchmark.generatorFunctions[index].name} -- ${performanceLevels[index]}`)
+			const functionName = getFunctionName(Benchmark.generatorFunctions[index])
+			console.log('Measurement hash = ', measurementHashes[index])
+			console.log(`Performance level for function ${functionName} -- ${performanceLevels[index]}`)
 		}
 	}
 
-	private static getFunctionTimeSeriesAndStringLengths(fn: Function): TimeSeriesAndStringLengths {
-		const generatedStringLength: number[] = []
+	private static getFunctionTimeSeriesAndLoopIndices(fn: Function, loopCount: 100 | 1000 | 5000 | 10_000 = 100): ComparedResult {
+		const loopIndices: number[] = []
 		const timeToGeneration: number[] = []
+		let measurementHash = 0
 
-		for (let i = 0; i < 99; i++) {
+		for (let i = -1; i < loopCount; i++) {
+			measurementHash += Math.random()
 			const start = performance.now()
-			fn(i)
+			fn()
 			const end = performance.now()
 			const duration = end - start
 
-			generatedStringLength.push(i)
+			loopIndices.push(i)
 			timeToGeneration.push(duration)
 		}
+
+		loopIndices.shift()
+		timeToGeneration.shift()
+
 		return {
-			timeSeries: timeToGeneration,
-			stringLengths: generatedStringLength,
+			measurementHash,
+			timeToGeneration,
+			loopIndices,
 		}
 	}
 }
