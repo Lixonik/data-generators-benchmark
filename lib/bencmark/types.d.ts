@@ -1,4 +1,5 @@
-export type TimeSeriesAndStringLengths = {
-    timeSeries: number[];
-    stringLengths: number[];
+export type ComparedResult = {
+    timeToGeneration: number[];
+    loopIndices: number[];
+    measurementHash: number;
 };
