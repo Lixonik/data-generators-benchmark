@@ -9,4 +9,6 @@ export declare class Benchmark {
     static printAvgGenerationTimes(precision?: number): void;
     static printPerformanceLevels(): void;
     private static getFunctionTimeSeriesAndLoopIndices;
+    private static generateGraph;
+    private static getFunctionName;
 }
