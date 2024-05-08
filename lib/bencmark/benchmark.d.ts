@@ -7,8 +7,7 @@ export declare class Benchmark {
     static clearCandidates: () => void;
     static plotAndSaveMeasurementTimesCharts(pathToMeasurementsPng?: PathLike): void;
     static printAvgGenerationTimes(precision?: number): void;
-    static printPerformanceLevels(): void;
-    private static getFunctionTimeSeriesAndLoopIndices;
+    private static getFunctionTimeSeriesAndIterationIndices;
     private static generateGraph;
     private static getFunctionName;
 }

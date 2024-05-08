@@ -1,5 +1,5 @@
 export type ComparedResult = {
 	timeToGeneration: number[] // timeSeries
-	loopIndices: number[] // loopIndices
+	iterationIndices: number[] // loopIndices
 	measurementHash: number
 }
