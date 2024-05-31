@@ -6,6 +6,7 @@ export declare class Benchmark {
     static removeCandidate: (...candidates: Function[]) => void;
     static clearCandidates: () => void;
     static plotAndSaveMeasurementTimesCharts(pathToMeasurementsPng?: PathLike): void;
+    static saveMeasurementTimesSeries(pathToMeasurements?: PathLike): void;
     static printAvgGenerationTimes(precision?: number): void;
     private static getFunctionTimeSeriesAndIterationIndices;
     private static generateGraph;

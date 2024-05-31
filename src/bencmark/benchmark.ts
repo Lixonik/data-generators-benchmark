@@ -4,7 +4,7 @@ import { PathLike } from 'fs'
 import { ComparedResult } from './types'
 import { calculateOpsPerSecond, getFunctionName } from './utils'
 import { Canvas, createCanvas } from 'canvas'
-import { ChartConfiguration, ChartData, ChartItem, ScriptableLineSegmentContext } from 'chart.js';
+import { ChartConfiguration, ChartData, ChartItem, ScriptableLineSegmentContext } from 'chart.js'
 import { Chart } from 'chart.js/auto'
 
 export class Benchmark {
@@ -47,6 +47,28 @@ export class Benchmark {
         writeFileSync(`${pathToMeasurementsPng}/${getFunctionName(Benchmark.generatorFunctions[0])}.png`, buffer)
     }
 
+    static saveMeasurementTimesSeries(pathToMeasurements?: PathLike) {
+        pathToMeasurements ??= './time_series'
+
+        let opsPerSecond = ''
+        let dataBuffer = ''
+
+        if (!existsSync(pathToMeasurements)) {
+            mkdirSync(pathToMeasurements)
+        }
+
+        Benchmark.generatorFunctions.forEach((fn) => {
+            const comparedResult = this.getFunctionTimeSeriesAndIterationIndices(fn)
+
+            const { timeToGeneration, iterationIndices, measurementHash } = comparedResult
+
+            opsPerSecond = timeToGeneration.map(calculateOpsPerSecond).join(', ')
+            dataBuffer += `${getFunctionName(fn)}\n${opsPerSecond}\n`
+
+        })
+        writeFileSync(`${pathToMeasurements}/${getFunctionName(Benchmark.generatorFunctions[0])}.txt`, dataBuffer, { flag: 'w+' })
+    }
+
     static printAvgGenerationTimes(precision?: number) {
         Benchmark.generatorFunctions.forEach((fn) => {
             const functionName = getFunctionName(fn)
@@ -62,6 +84,8 @@ export class Benchmark {
                 : avgGenerationTime
             } ms`)
         })
+
+        console.log('\n')
     }
 
     private static getFunctionTimeSeriesAndIterationIndices(fn: Function, iterationCount: 100 | 1000 | 5000 | 10_000 = 100): ComparedResult {
@@ -106,8 +130,7 @@ export class Benchmark {
         const getCandidateColor = (index: number) => {
             if (index === 0) {
                 return `rgb(0, 0, 255)`
-            }
-            else if (index === 1) {
+            } else if (index === 1) {
                 return `rgb(255, 0, 0)`
             }
 
@@ -129,7 +152,7 @@ export class Benchmark {
                         borderColor: getCandidateColor(index),
                         borderWidth: 2,
                         fill: false,
-                        borderDash: index % 2 ? [10, 10] : []
+                        borderDash: index % 2 ? [10, 10] : [],
                     }
                 })),
         }
